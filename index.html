@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Vectorization</title>
+        <style>
+            :root {
+                color-scheme: light;
+                --bg: #f4efe7;
+                --bg-accent: #e9dcc7;
+                --panel: rgba(255, 255, 255, 0.74);
+                --panel-border: rgba(78, 58, 32, 0.14);
+                --text: #1f1a17;
+                --muted: #6e6258;
+                --accent: #9b4d2b;
+                --accent-strong: #5f2b16;
+                --shadow: 0 24px 70px rgba(57, 37, 17, 0.16);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                padding: 40px 20px;
+                font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+                color: var(--text);
+                background:
+                    radial-gradient(circle at top left, rgba(155, 77, 43, 0.2), transparent 28%),
+                    radial-gradient(circle at top right, rgba(92, 50, 26, 0.14), transparent 32%),
+                    linear-gradient(180deg, #faf6f0 0%, var(--bg) 100%);
+            }
+
+            .app {
+                width: min(1100px, 100%);
+                margin: 0 auto;
+                display: grid;
+                gap: 24px;
+            }
+
+            .hero {
+                display: grid;
+                gap: 8px;
+                padding: 6px 2px;
+            }
+
+            .eyebrow {
+                margin: 0;
+                text-transform: uppercase;
+                letter-spacing: 0.18em;
+                font-size: 0.78rem;
+                color: var(--muted);
+            }
+
+            h1 {
+                margin: 0;
+                font-size: clamp(2rem, 4vw, 3.5rem);
+                line-height: 1;
+                font-weight: 700;
+            }
+
+            .subtitle {
+                margin: 0;
+                max-width: 64ch;
+                color: var(--muted);
+                font-size: 1.02rem;
+                line-height: 1.55;
+            }
+
+            .panel {
+                background: var(--panel);
+                border: 1px solid var(--panel-border);
+                border-radius: 24px;
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(10px);
+            }
+
+            .controls {
+                padding: 20px;
+                display: grid;
+                gap: 16px;
+            }
+
+            .controls-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: end;
+            }
+
+            .field {
+                display: grid;
+                gap: 8px;
+                min-width: 180px;
+                flex: 1 1 220px;
+            }
+
+            .field label {
+                font-size: 0.9rem;
+                color: var(--muted);
+            }
+
+            .field input {
+                width: 100%;
+                border: 1px solid rgba(95, 43, 22, 0.16);
+                border-radius: 14px;
+                padding: 12px 14px;
+                background: rgba(255, 255, 255, 0.86);
+                color: var(--text);
+                font: inherit;
+                outline: none;
+            }
+
+            .field input:focus {
+                border-color: rgba(155, 77, 43, 0.5);
+                box-shadow: 0 0 0 4px rgba(155, 77, 43, 0.12);
+            }
+
+            .primary-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            button {
+                border: 0;
+                border-radius: 999px;
+                padding: 12px 18px;
+                font: inherit;
+                cursor: pointer;
+                transition:
+                    transform 120ms ease,
+                    box-shadow 120ms ease,
+                    background-color 120ms ease;
+            }
+
+            button:hover {
+                transform: translateY(-1px);
+            }
+
+            button:active {
+                transform: translateY(0);
+            }
+
+            #importButton,
+            #downloadButton {
+                background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+                color: white;
+                box-shadow: 0 12px 28px rgba(95, 43, 22, 0.24);
+            }
+
+            .previews {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 18px;
+            }
+
+            .preview-card {
+                padding: 18px;
+                display: grid;
+                gap: 12px;
+            }
+
+            .preview-card h2 {
+                margin: 0;
+                font-size: 1rem;
+                color: var(--muted);
+                font-weight: 600;
+                letter-spacing: 0.03em;
+                text-transform: uppercase;
+            }
+
+            .preview-frame {
+                min-height: 280px;
+                border: 1px dashed rgba(95, 43, 22, 0.22);
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.7);
+                display: grid;
+                place-items: center;
+                overflow: hidden;
+                padding: 12px;
+            }
+
+            .preview-frame img {
+                display: block;
+                max-width: 100%;
+                max-height: 520px;
+                object-fit: contain;
+            }
+
+            .hint {
+                margin: 0;
+                color: var(--muted);
+                font-size: 0.92rem;
+                line-height: 1.4;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            @media (max-width: 820px) {
+                body {
+                    padding: 18px 12px 28px;
+                }
+
+                .previews {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="app">
+            <header class="hero">
+                <h1>SVG Tracer</h1>
+                <p class="subtitle">
+                    Import an SVG, preview the source, then rasterize it at a chosen DPI when you trace and export the
+                    converted SVG at the width you want.
+                </p>
+            </header>
+
+            <section class="panel controls" aria-label="Tracing controls">
+                <div class="primary-actions">
+                    <button id="importButton" type="button">Import SVG</button>
+                    <button id="traceButton" type="button" disabled>Trace SVG</button>
+                    <button id="downloadButton" type="button" hidden>Download SVG</button>
+                    <input id="fileInput" type="file" accept=".svg,image/svg+xml" hidden />
+                </div>
+
+                <div class="controls-row">
+                    <div class="field">
+                        <label for="outputWidth">Output width</label>
+                        <input id="outputWidth" type="number" min="1" step="1" placeholder="optional" />
+                    </div>
+                    <div class="field">
+                        <label for="lineWeight">Line weight</label>
+                        <input id="lineWeight" type="number" min="0.1" step="0.1" value="1" />
+                    </div>
+                    <div class="field">
+                        <label for="rasterDpi">Raster DPI</label>
+                        <input id="rasterDpi" type="range" min="1000" max="10000" step="1000" value="5000" />
+                        <div class="hint" id="rasterDpiValue">5000 DPI</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="previews" aria-label="Image previews">
+                <article class="panel preview-card">
+                    <h2>Input image</h2>
+                    <div class="preview-frame">
+                        <img id="inputPreview" alt="Input preview" hidden />
+                        <p class="hint" id="inputHint">No image loaded yet.</p>
+                    </div>
+                </article>
+
+                <article class="panel preview-card">
+                    <h2>Output image</h2>
+                    <div class="preview-frame">
+                        <img id="outputPreview" alt="Output preview" hidden />
+                        <p class="hint" id="outputHint">The traced SVG will appear here.</p>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </body>
+</html>
