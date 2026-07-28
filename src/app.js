@@ -21,6 +21,18 @@ let currentRasterUrl = '';
 let currentSourceWidth = 0;
 let currentSourceHeight = 0;
 
+function convertGerberToSvg(gerber) {
+    return new Promise((resolve, reject) => {
+        gerberToSvg(gerber, (err, svg) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(svg);
+            }
+        });
+    });
+}
+
 function readPositiveNumber(inputElement) {
     const value = Number.parseFloat(inputElement.value);
 
@@ -272,11 +284,12 @@ rasterDpiInput.addEventListener('input', () => {
 });
 
 traceButton.addEventListener('click', () => {
+    console.log('Tracing...');
     syncOutputDimensions();
     traceCurrentRaster();
 });
 
-fileInput.addEventListener('change', () => {
+fileInput.addEventListener('change', async () => {
     const file = fileInput.files && fileInput.files[0];
 
     if (!file) {
@@ -291,7 +304,15 @@ fileInput.addEventListener('change', () => {
         URL.revokeObjectURL(currentRasterUrl);
     }
 
-    const inputUrl = URL.createObjectURL(file);
+    let inputUrl = URL.createObjectURL(file);
+
+    if (file.name.endsWith('.gbr')) {
+        const data = await file.text();
+        const svg = await convertGerberToSvg(data);
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        inputUrl = URL.createObjectURL(blob);
+    }
+
     currentInputPreviewUrl = inputUrl;
 
     const image = new Image();

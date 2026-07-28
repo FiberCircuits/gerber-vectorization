@@ -13,6 +13,7 @@
     "license": "ISC",
     "type": "commonjs",
     "dependencies": {
+        "gerber-to-svg": "^4.2.8",
         "imagetracerjs": "^1.2.6"
     },
     "devDependencies": {

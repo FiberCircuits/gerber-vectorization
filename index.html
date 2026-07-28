@@ -225,10 +225,10 @@
 
             <section class="panel controls" aria-label="Tracing controls">
                 <div class="primary-actions">
-                    <button id="importButton" type="button">Import SVG</button>
+                    <button id="importButton" type="button">Import SVG/Gerber</button>
                     <button id="traceButton" type="button" disabled>Trace SVG</button>
                     <button id="downloadButton" type="button" hidden>Download SVG</button>
-                    <input id="fileInput" type="file" accept=".svg,image/svg+xml" hidden />
+                    <input id="fileInput" type="file" accept=".svg,image/svg+xml,.gbr" hidden />
                 </div>
 
                 <div class="controls-row">
@@ -266,5 +266,7 @@
                 </article>
             </section>
         </main>
+
+        <script src="https://unpkg.com/gerber-to-svg@^4.0.0/dist/gerber-to-svg.min.js"></script>
     </body>
 </html>
