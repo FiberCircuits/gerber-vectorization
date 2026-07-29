@@ -3,12 +3,19 @@
 import argparse
 import sys
 import tempfile
+from decimal import Decimal
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
 import cairosvg
 from PIL import Image, ImageOps
 import vtracer
+from pygerber.gerberx3.api.v2 import GerberFile
+
+GERBER_EXTENSIONS = {
+    ".gbr", ".gbl", ".gtl", ".gbs", ".gts", ".gbo", ".gto",
+    ".gbp", ".gtp", ".gko", ".gm1",
+}
 
 
 def rasterize_svg(svg_path, png_path, dpi):
@@ -19,6 +26,18 @@ def rasterize_svg(svg_path, png_path, dpi):
         write_to=str(png_path),
         dpi=dpi,
     )
+
+
+def rasterize_gerber(gerber_path, png_path, dpi):
+    print(f"Rasterizing at {dpi} DPI...")
+
+    parsed = GerberFile.from_file(str(gerber_path)).parse()
+
+    # pygerber works in dots-per-mm rather than dpi, and requires an
+    # exact (Decimal) value rather than a float.
+    dpmm = Decimal(dpi / 25.4)
+
+    parsed.render_raster(str(png_path), dpmm=dpmm)
 
 
 def create_edge_map(png_path, edge_path, threshold=50):
@@ -164,24 +183,24 @@ def rewrite_svg(
 
 
 def convert(
-    input_svg,
+    input_path,
     output_svg,
-    dpi=5000,
+    dpi=3000,
     line_width=1,
     output_width=None,
     threshold=50
 ):
-    input_svg = Path(input_svg).resolve()
+    input_path = Path(input_path).resolve()
     output_svg = Path(output_svg).resolve()
 
-    if not input_svg.exists():
-        raise FileNotFoundError(input_svg)
+    if not input_path.exists():
+        raise FileNotFoundError(input_path)
 
     output_svg.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
-    
+
     temp_dir = output_svg.parent / f"{output_svg.stem}-intermediate"
     temp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -189,12 +208,19 @@ def convert(
     edge_png = temp_dir / "edges.png"
     traced_svg = temp_dir / "traced.svg"
 
-    # SVG → high-DPI raster
-    rasterize_svg(
-        input_svg,
-        raster_png,
-        dpi,
-    )
+    # SVG or Gerber → high-DPI raster
+    if input_path.suffix.lower() in GERBER_EXTENSIONS:
+        rasterize_gerber(
+            input_path,
+            raster_png,
+            dpi,
+        )
+    else:
+        rasterize_svg(
+            input_path,
+            raster_png,
+            dpi,
+        )
 
     # Raster → binary image
     create_edge_map(
@@ -223,13 +249,13 @@ def convert(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Rasterize and vectorize a KiCad-exported SVG."
+        description="Rasterize and vectorize a KiCad-exported SVG or Gerber file."
     )
 
     parser.add_argument(
         "input",
         type=Path,
-        help="Input SVG exported from KiCad",
+        help="Input SVG or Gerber (.gbr, .gtl, .gbl, ...) file exported from KiCad",
     )
 
     parser.add_argument(
@@ -242,8 +268,8 @@ def main():
     parser.add_argument(
         "--dpi",
         type=int,
-        default=5000,
-        help="Rasterization DPI (default: 5000)",
+        default=3000,
+        help="Rasterization DPI (default: 3000)",
     )
 
     parser.add_argument(
@@ -291,7 +317,7 @@ def main():
 
     try:
         convert(
-            input_svg=args.input,
+            input_path=args.input,
             output_svg=output,
             dpi=args.dpi,
             line_width=args.line_width,
