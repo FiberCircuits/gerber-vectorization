@@ -13,6 +13,8 @@ const outputHint = document.getElementById('outputHint');
 const traceButton = document.getElementById('traceButton');
 const downloadButton = document.getElementById('downloadButton');
 const edgeThreshold = 180;
+const defaultOutputHint = 'Click on "Trace SVG" once the input image is loaded.';
+const traceInProgressHint = 'In progress, it might take a minute...';
 let currentOutputSvg = '';
 let currentOutputName = 'traced';
 let currentOutputPreviewUrl = '';
@@ -94,6 +96,7 @@ function traceCurrentRaster() {
 
     downloadButton.hidden = true;
     outputPreview.hidden = true;
+    outputHint.textContent = traceInProgressHint;
     outputHint.hidden = false;
 
     const image = new Image();
@@ -328,6 +331,7 @@ fileInput.addEventListener('change', async () => {
         currentOutputName = file.name.replace(/\.[^.]+$/, '');
         downloadButton.hidden = true;
         outputPreview.hidden = true;
+        outputHint.textContent = defaultOutputHint;
         outputHint.hidden = false;
         updateTraceButtonState();
     };

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Vectorization</title>
+        <title>Gerber Vectorization</title>
         <style>
             :root {
                 color-scheme: light;
@@ -146,10 +146,21 @@
             }
 
             #importButton,
-            #downloadButton {
+            #traceButton {
                 background: linear-gradient(180deg, var(--accent), var(--accent-strong));
                 color: white;
                 box-shadow: 0 12px 28px rgba(95, 43, 22, 0.24);
+            }
+
+            #traceButton:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            #downloadButton {
+                background: linear-gradient(180deg, #4caf50, #2e7d32);
+                color: white;
+                box-shadow: 0 12px 28px rgba(46, 125, 50, 0.24);
             }
 
             .previews {
@@ -171,6 +182,7 @@
                 font-weight: 600;
                 letter-spacing: 0.03em;
                 text-transform: uppercase;
+                text-align: center;
             }
 
             .preview-frame {
@@ -184,7 +196,7 @@
                 padding: 12px;
             }
 
-            .preview-frame img {
+            .preview-frame img:not([hidden]) {
                 display: block;
                 max-width: 100%;
                 max-height: 520px;
@@ -216,21 +228,13 @@
     <body>
         <main class="app">
             <header class="hero">
-                <h1>SVG Tracer</h1>
+                <h1>Gerber Vectorization</h1>
                 <p class="subtitle">
-                    Import an SVG, preview the source, then rasterize it at a chosen DPI when you trace and export the
-                    converted SVG at the width you want.
+                    Import a Gerber, preview it, convert it to outline vectors, and download as SVG.
                 </p>
             </header>
 
             <section class="panel controls" aria-label="Tracing controls">
-                <div class="primary-actions">
-                    <button id="importButton" type="button">Import SVG/Gerber</button>
-                    <button id="traceButton" type="button" disabled>Trace SVG</button>
-                    <button id="downloadButton" type="button" hidden>Download SVG</button>
-                    <input id="fileInput" type="file" accept=".svg,image/svg+xml,.gbr" hidden />
-                </div>
-
                 <div class="controls-row">
                     <div class="field">
                         <label for="outputWidth">Output width</label>
@@ -242,27 +246,35 @@
                     </div>
                     <div class="field">
                         <label for="rasterDpi">Raster DPI</label>
-                        <input id="rasterDpi" type="range" min="1000" max="10000" step="1000" value="5000" />
-                        <div class="hint" id="rasterDpiValue">5000 DPI</div>
+                        <input id="rasterDpi" type="range" min="1000" max="10000" step="1000" value="3000" />
+                        <div class="hint" id="rasterDpiValue">3000 DPI</div>
                     </div>
                 </div>
             </section>
 
             <section class="previews" aria-label="Image previews">
                 <article class="panel preview-card">
-                    <h2>Input image</h2>
+                    <div class="primary-actions">
+                        <button id="importButton" type="button">Import Gerber</button>
+                        <input id="fileInput" type="file" accept=".svg,image/svg+xml,.gbr" hidden />
+                    </div>
                     <div class="preview-frame">
                         <img id="inputPreview" alt="Input preview" hidden />
                         <p class="hint" id="inputHint">No image loaded yet.</p>
                     </div>
+                    <h2>Input image</h2>
                 </article>
 
                 <article class="panel preview-card">
-                    <h2>Output image</h2>
+                    <div class="primary-actions">
+                        <button id="traceButton" type="button" disabled>Trace Outline</button>
+                        <button id="downloadButton" type="button" hidden>Download SVG</button>
+                    </div>
                     <div class="preview-frame">
                         <img id="outputPreview" alt="Output preview" hidden />
-                        <p class="hint" id="outputHint">The traced SVG will appear here.</p>
+                        <p class="hint" id="outputHint">Click on "Trace SVG" once the input image is loaded.</p>
                     </div>
+                    <h2>Output image</h2>
                 </article>
             </section>
         </main>
