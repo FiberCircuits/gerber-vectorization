@@ -13,7 +13,7 @@ const outputHint = document.getElementById('outputHint');
 const traceButton = document.getElementById('traceButton');
 const downloadButton = document.getElementById('downloadButton');
 const edgeThreshold = 180;
-const defaultOutputHint = 'Click on "Trace SVG" once the input image is loaded.';
+const defaultOutputHint = 'Click on "Trace Outline" once the input image is loaded.';
 const traceInProgressHint = 'In progress, it might take a minute...';
 let currentOutputSvg = '';
 let currentOutputName = 'traced';
@@ -99,6 +99,12 @@ function traceCurrentRaster() {
     outputHint.textContent = traceInProgressHint;
     outputHint.hidden = false;
 
+    // Let the browser paint the "in progress" hint before the synchronous
+    // rasterize/trace work below blocks the main thread.
+    requestAnimationFrame(() => requestAnimationFrame(startTracing));
+}
+
+function startTracing() {
     const image = new Image();
 
     image.onload = () => {
